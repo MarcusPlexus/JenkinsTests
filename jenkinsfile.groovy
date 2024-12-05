@@ -55,9 +55,5 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            sh 'docker ps -q | xargs docker stop || true'
-        }
-    }
+
 }
