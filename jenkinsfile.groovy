@@ -13,7 +13,7 @@ pipeline {
         stage('Run WebGoat Docker Image') {
             steps {
                 script {
-                    sh 'docker run -d -p 8080:8080 webgoat/webgoat-8.0'
+                    sh 'docker run -d -p 8081:8080 webgoat/webgoat-8.0'
                 }
             }
         }
