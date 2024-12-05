@@ -1,54 +1,57 @@
 pipeline {
-    agent { label 'linux' } // Ensure you are using the correct agent
+    agent { label 'linux' } // Ensure the correct agent is selected
     
     environment {
-        DOCKER_IMAGE = 'webgoat/webgoat-8.0' // Set Docker image name if you're using an existing image
-        GIT_REPO = 'https://github.com/WebGoat/WebGoat'
+        DOCKER_IMAGE = 'webgoat/webgoat-8.0' // The Docker image for WebGoat
+        GIT_REPO = 'https://github.com/WebGoat/WebGoat' // GitHub repository URL
+        GIT_BRANCH = 'main' // Ensure this matches the correct branch name in WebGoat repo
     }
-    
+
+    tools {
+        git 'Default' // Ensures that the correct Git installation is used
+    }
+
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                // Pull code from GitHub
-                git url: "${GIT_REPO}"
+                // Pull the code from the WebGoat repository and ensure the correct branch is used
+                checkout scm: [
+                    $class: 'GitSCM', 
+                    branches: [[name: "*/${GIT_BRANCH}"]], 
+                    userRemoteConfigs: [[url: "${GIT_REPO}"]]
+                ]
             }
         }
-        
-        stage('Build') {
+
+        stage('Build the Application') {
             steps {
                 script {
-                    // Build the project (adjust based on WebGoat's build tool)
-                    sh 'mvn clean install -DskipTests'  // Example for Maven, change if needed
+                    // Build the application (Assuming Maven is being used)
+                    sh 'mvn clean install -DskipTests' // Adjust if WebGoat uses another build tool
                 }
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    // Build and run the Docker container
-                    sh """
-                        docker build -t webgoat/webgoat-8.0 .
-                        docker run -d -p 8081:8080 webgoat/webgoat-8.0
-                    """
+                    // Build the Docker image from the current Dockerfile in the repo
+                    sh 'docker build -t webgoat/webgoat-8.0 .'
                 }
             }
         }
-        
-        stage('Test') {
+
+        stage('Run WebGoat Docker Container') {
             steps {
                 script {
-                    // Verify the app is running (optional, could be a curl to check health)
-                    sh 'curl -s http://localhost:8081 || exit 1'  // Checking if the page is accessible
+                    // Run the WebGoat container and expose the necessary ports
+                    sh 'docker run -d -p 8081:8080 webgoat/webgoat-8.0'
                 }
             }
         }
-    }
-    
-    post {
-        always {
-            // Clean up Docker containers if needed
-            sh 'docker ps -q | xargs docker stop || true'
-        }
-    }
-}
+
+        stage('Test WebGoat Accessibility') {
+            steps {
+                script {
+                    // Check if WebGoat is running by sending a request to the exposed port
+                    sh 'curl -s http://localhost:8081 || exit 1' // Option
