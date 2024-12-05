@@ -39,4 +39,25 @@ pipeline {
         }
 
         stage('Run WebGoat Docker Container') {
-            steps 
+            steps {
+                script {
+                    sh 'docker run -d -p 8081:8080 webgoat/webgoat-8.0'
+                }
+            }
+        }
+
+        stage('Test WebGoat Accessibility') {
+            steps {
+                script {
+                    sh 'curl -s http://localhost:8081 || exit 1'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker ps -q | xargs docker stop || true'
+        }
+    }
+}
