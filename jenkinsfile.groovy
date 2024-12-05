@@ -2,18 +2,18 @@ pipeline {
     agent { label 'linux' }
 
     stages {
-        stage('Pull Hello World Docker Image') {
+        stage('Pull WebGoat Docker Image') {
             steps {
                 script {
-                    sh 'docker pull hello-world'
+                    sh 'docker pull webgoat/webgoat-8.0'
                 }
             }
         }
 
-        stage('Run Hello World Docker Image') {
+        stage('Run WebGoat Docker Image') {
             steps {
                 script {
-                    sh 'docker run hello-world'
+                    sh 'docker run -d -p 8080:8080 webgoat/webgoat-8.0'
                 }
             }
         }
